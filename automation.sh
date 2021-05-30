@@ -4,24 +4,29 @@ s3Bucket=upgrad-rushikesh
 #step1: Update the package details and package list at the start of the script
 apt update -y
 #step2: check if apache2 is installed or not
-which apache2
-if [ $? -ge 1 ]
+checkApache=$(dpkg --get-selections | grep apache2 | awk '{print $2}' | head -1)
+if [ "$checkApache" = "deinstall" ] || [ -z "$checkApache" ];
 then
+        echo "Started installing apache"
         apt-get install apache2
+else
+        echo "Apache is installed"
 fi
 #step3:check if apache server is running or not
-service apache2 status
-if [ $? -ge 1 ]
+apacheStatus=$(service apache2 status | grep -i Active | awk '{print $2}')
+if [ "$apacheStatus" = "inactive" ]
 then
         systemctl start apache2
+        echo "Apache server started"
 fi
 #step 4-A check if service is running or not
-service apache2 status
-if [ $? -eq 0 ]
+serviceStatus=$(service --status-all | grep apache2 | awk '{print $2}')
+if [ "$serviceStatus" = "+" ]
 then
-        echo 'Apache2 service is running'
+        echo "Apache service is running"
 else
         service apache2 start
+        echo "Apache service started"
 fi
 #step4:creat timestamp to add in this into name
 timestamp=$(date '+%d%m%Y-%H%M%S')
